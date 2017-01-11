@@ -1,0 +1,1399 @@
+GAMATRONIC-POWER-PLUS-MIB DEFINITIONS ::= BEGIN
+     
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    OBJECT-IDENTITY,
+    Counter32, Gauge32, Integer32, 
+    enterprises,IpAddress 				       
+    	FROM SNMPv2-SMI   
+    	
+    TEXTUAL-CONVENTION, DisplayString
+    	FROM SNMPv2-TC 
+    	
+    gamatronicLTD
+    	FROM GAMATRONIC-MIB;  
+     
+	
+	
+	powerplusMIB OBJECT IDENTIFIER 	::= { gamatronicLTD 5 }  
+	
+	
+	
+	
+	--
+	-- The Device Identification group.
+	--   All objects in this group except for ppIdentSite 
+	--	are set at device initialization
+	--   and remain static.
+	--
+	
+	ppIdent OBJECT IDENTIFIER ::= { powerplusMIB 1 }
+	
+	ppIdentModelID OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"UPS model identifier"
+		::= { ppIdent 1 }
+		
+	ppIdentControllerSoftwareVersion OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (8))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"System controller software version"
+		::= { ppIdent 2 }  
+		
+	ppIdentAgentSoftwareVersion OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (5))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"System controller software version"
+		::= { ppIdent 3 }
+		
+	ppIdentControllerID OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (4))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"System controller identifier"
+		::= { ppIdent 4 }
+		
+	ppIdentSite OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (6))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Power Plus site"
+		::= { ppIdent 5 }
+		
+--
+-- The system group. 
+--
+		
+	ppSystem OBJECT IDENTIFIER ::= { powerplusMIB 2 }		
+	
+    ppSystemVoltage OBJECT-TYPE
+    	SYNTAX INTEGER
+    	UNITS	"Volts"
+    	MAX-ACCESS read-only
+    	STATUS current
+    	DESCRIPTION
+    		"Nominal system AC voltage"   
+    	::= { ppSystem 1 }
+    	
+    ppSystemNumLines OBJECT-TYPE
+    	SYNTAX INTEGER (1..3)
+     	MAX-ACCESS read-only  
+     	STATUS current
+     	DESCRIPTION
+     		"The number of lines utilized in this device" 
+     	::= { ppSystem 2 } 
+     
+	ppSystemTemperature OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "degrees Centigrade"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present system temperature"
+		::= { ppSystem 3 }  
+	
+	ppSystemRTCYear OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"RTC Year"
+		::= { ppSystem 4 }
+	
+	ppSystemRTCMonth OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"RTC Month"
+		::= { ppSystem 5 }
+		
+	ppSystemRTCDay OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"RTC Day"
+		::= { ppSystem 6 }
+		 
+	ppSystemRTCHour OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"RTC Hour"
+		::= { ppSystem 7 }
+		
+	ppSystemRTCMinute OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"RTC Minute"
+		::= { ppSystem 8 }	
+		
+	ppSystemRTCSecond OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"RTC Second"
+		::= { ppSystem 9 } 
+     	
+--
+-- The Alarm group.
+-- 
+     
+	ppAlarm OBJECT IDENTIFIER ::= { powerplusMIB 3 }
+   
+	ppAlarmCode OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The Alarm 32 bit integer code"
+		::= { ppAlarm 1 }
+		
+	ppAlarmTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF PpAlarmEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"A list of alarm table entries."
+		::= { ppAlarm 2 }
+		
+	ppAlarmEntry OBJECT-TYPE
+		SYNTAX PpAlarmEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"Entry of alarm table"  
+		INDEX { ppAlarmID }
+		::= { ppAlarmTable 1 }
+		
+	PpAlarmEntry ::=
+		SEQUENCE {
+			ppAlarmID INTEGER,
+			ppAlarmDesc DisplayString,
+			ppAlarmDescShort DisplayString,
+			ppAlarmPresent INTEGER
+		}
+		
+	ppAlarmID OBJECT-TYPE
+		SYNTAX INTEGER (0..31)
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The alarm identifier"
+		::= { ppAlarmEntry 1 }
+		
+	ppAlarmDesc OBJECT-TYPE
+		SYNTAX DisplayString(SIZE(0..64))  
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The full alarm description"
+		::= { ppAlarmEntry 2 }
+		
+	ppAlarmDescShort OBJECT-TYPE
+		SYNTAX DisplayString(SIZE(6))
+		MAX-ACCESS read-only
+		STATUS current 
+		DESCRIPTION
+			"The short alarm description coincided with
+			 description on system controller display."
+		::= { ppAlarmEntry 3 }
+		
+	ppAlarmPresent OBJECT-TYPE
+		SYNTAX INTEGER{
+			no (0),
+			yes (1)
+		}
+		MAX-ACCESS read-only
+		STATUS current 
+		DESCRIPTION
+			"Indicate if alarm is present 1- yes/ 0 - no"
+		::= { ppAlarmEntry 4 }
+		
+--
+-- The input group.
+-- 
+					
+	ppInput OBJECT IDENTIFIER ::= { powerplusMIB 4 }
+	
+	ppInputTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF PpInputEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"A list of input table entries. The number of entries
+               is given by the value of ppSystemNumLines."
+		::= { ppInput 1 }
+		
+	ppInputEntry OBJECT-TYPE
+		SYNTAX PpInputEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"Entry of input table"  
+		INDEX { ppInputLineIndex }
+		::= { ppInputTable 1 }
+		
+	PpInputEntry ::=
+		SEQUENCE {
+			ppInputLineIndex INTEGER,
+			ppInputVoltage INTEGER,
+			ppInputCurrent INTEGER,
+			ppInputApparentPower INTEGER,
+			ppInputActivePower INTEGER,
+			ppInputPowerFactor INTEGER
+		} 
+		
+	ppInputLineIndex OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The input line identifier."
+		::= { ppInputEntry 1 }
+		
+	ppInputVoltage OBJECT-TYPE
+		SYNTAX INTEGER      
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present input voltage."
+		::= { ppInputEntry 2 }
+		
+	ppInputCurrent OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "Amp" 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present input current."
+		::= { ppInputEntry 3 }
+		
+	ppInputApparentPower OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "0.1 KVA" 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present input apparent power."
+		::= { ppInputEntry 4 }
+		
+	ppInputActivePower OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "0.1 KWatts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present input active power."
+		::= { ppInputEntry 5 }
+		
+	ppInputPowerFactor OBJECT-TYPE
+		SYNTAX INTEGER (0..100)
+		UNITS "0.01"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present input power factor"
+		::= { ppInputEntry 6 }		
+		
+		
+--
+-- The output group.
+-- 
+					
+	ppOutput OBJECT IDENTIFIER ::= { powerplusMIB 5 }
+	
+	ppOutputTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF PpOutputEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"A list of output table entries. The number of entries
+               is given by the value of ppSystemNumLines."
+		::= { ppOutput 1 }
+		
+	ppOutputEntry OBJECT-TYPE
+		SYNTAX PpOutputEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"Entry of output table"  
+		INDEX { ppOutputLineIndex }
+		::= { ppOutputTable 1 }
+		
+	PpOutputEntry ::=
+		SEQUENCE {
+			ppOutputLineIndex INTEGER,
+			ppOutputVoltage INTEGER,
+			ppOutputCurrent INTEGER,
+			ppOutputApparentPower INTEGER,
+			ppOutputActivePower INTEGER,
+			ppOutputPercentLoad INTEGER,
+			ppOutputPercentActiveLoad INTEGER, 
+			ppOutputPowerFactor INTEGER
+		} 
+		
+	ppOutputLineIndex OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The output line identifier."
+		::= { ppOutputEntry 1 }
+		
+	ppOutputVoltage OBJECT-TYPE
+		SYNTAX INTEGER      
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present output voltage."
+		::= { ppOutputEntry 2 }
+		
+	ppOutputCurrent OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "Amp" 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present output current."
+		::= { ppOutputEntry 3 }
+		
+	ppOutputApparentPower OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "0.1 KVA" 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present output apparent power."
+		::= { ppOutputEntry 4 }
+		
+	ppOutputActivePower OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "0.1 KWatts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present output active power."
+		::= { ppOutputEntry 5 }
+		
+	ppOutputPercentLoad OBJECT-TYPE
+		SYNTAX INTEGER (0..200)
+		UNITS "percent"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The percentage of the UPS power (Watts) capacity presently
+			being used on this output line."
+		::= { ppOutputEntry 6 }
+		
+	ppOutputPercentActiveLoad OBJECT-TYPE
+		SYNTAX INTEGER (0..200)
+		UNITS "percent"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The percentage of the UPS active power (VA) capacity presently
+			being used on this output line."
+		::= { ppOutputEntry 7 }
+		
+	ppOutputPowerFactor OBJECT-TYPE
+		SYNTAX INTEGER (0..100)
+		UNITS "0.01"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present output power factor"
+		::= { ppOutputEntry 8 }   
+		
+--
+-- The DC group.
+-- 
+					
+	ppDC OBJECT IDENTIFIER ::= { powerplusMIB 6 } 
+	
+	ppDCVoltagePositive OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present positive DC voltage"
+		::= { ppDC 1 }  
+	
+	ppDCVoltageNegative OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present negative DC voltage"
+		::= { ppDC 2 }
+		
+	ppDCVoltageTotal OBJECT-TYPE
+		SYNTAX INTEGER
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present total (positive+negative) DC voltage"
+		::= { ppDC 3 }  
+	
+--
+-- Module group
+-- 
+	ppModule OBJECT IDENTIFIER ::= { powerplusMIB 7 } 
+   
+	ppModuleNumber OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The number of installed modules."
+		::= { ppModule 1 }
+   
+	ppModuleTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF PpModuleEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"A list of module table entries. The number of entries
+               is given by the value of ppModuleNumber."
+		::= { ppModule 2 }
+		
+	ppModuleEntry OBJECT-TYPE
+		SYNTAX PpModuleEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"Entry of module table"  
+		INDEX { ppModuleIndex }
+		::= { ppModuleTable 1 }
+		
+	PpModuleEntry ::=
+		SEQUENCE {
+			ppModuleIndex INTEGER,   
+			ppModuleNoResponseCount INTEGER,
+			ppModuleAddress INTEGER, 
+            ppModuleStatus1 INTEGER,
+            ppModuleStatus2 INTEGER,
+            ppModuleStatus3 INTEGER,
+            ppModuleStatus4 INTEGER,
+            ppModuleStatus5 INTEGER,
+			ppModuleInputVoltageLine1 INTEGER,
+			ppModuleInputVoltageLine2 INTEGER, 
+			ppModuleInputVoltageLine3 INTEGER,
+			ppModuleOutputVoltageLine1 INTEGER,
+			ppModuleOutputVoltageLine2 INTEGER, 
+			ppModuleOutputVoltageLine3 INTEGER,
+			ppModuleInputCurrentLine1 INTEGER,   
+			ppModuleInputCurrentLine2 INTEGER,
+            ppModuleInputCurrentLine3 INTEGER,  
+            ppModuleOutputCurrentLine1 INTEGER,   
+			ppModuleOutputCurrentLine2 INTEGER,
+            ppModuleOutputCurrentLine3 INTEGER,
+            ppModuleDCVoltagePositive INTEGER,
+            ppModuleDCVoltageNegative INTEGER, 
+            ppModuleFrequency INTEGER,  
+            ppModuleNominalPower INTEGER,
+            ppModuleIsMaster INTEGER
+		} 
+		
+	ppModuleIndex OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The module index."
+		::= { ppModuleEntry 1 }   
+		
+	ppModuleNoResponseCount OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Number of times module no response to system controller. Start with 0"
+		::= { ppModuleEntry 2 } 
+		
+	ppModuleAddress OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Module identification address"
+		::= { ppModuleEntry 3 }    
+		
+	ppModuleStatus1 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Status byte 1"
+		::= { ppModuleEntry 4 }     
+		
+	ppModuleStatus2 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Status byte 2"
+		::= { ppModuleEntry 5 }   
+		
+	ppModuleStatus3 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Status byte 3"
+		::= { ppModuleEntry 6 }   
+		
+	ppModuleStatus4 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Status byte 4"
+		::= { ppModuleEntry 7 } 
+		
+	ppModuleStatus5 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Status byte 5"
+		::= { ppModuleEntry 8 }   
+		
+	ppModuleInputVoltageLine1 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 1 module AC input voltage"
+		::= { ppModuleEntry 9 } 
+		
+	ppModuleInputVoltageLine2 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 2 module AC input voltage"
+		::= { ppModuleEntry 10 }  
+		
+	ppModuleInputVoltageLine3 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 3 module AC input voltage"
+		::= { ppModuleEntry 11 }  
+		
+	ppModuleOutputVoltageLine1 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 1 module AC output voltage"
+		::= { ppModuleEntry 12 } 
+		
+	ppModuleOutputVoltageLine2 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 2 module AC output voltage"
+		::= { ppModuleEntry 13 } 
+		
+	ppModuleOutputVoltageLine3 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 3 module AC output voltage"
+		::= { ppModuleEntry 14 }
+
+    ppModuleInputCurrentLine1 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Amp"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 1 module AC input Current"
+		::= { ppModuleEntry 15 } 
+		
+	ppModuleInputCurrentLine2 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Amp"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 2 module AC input Current"
+		::= { ppModuleEntry 16 }  
+		
+	ppModuleInputCurrentLine3 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Amp"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 3 module AC input Current"
+		::= { ppModuleEntry 17 }  
+		
+	ppModuleOutputCurrentLine1 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Amp"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 1 module AC output Current"
+		::= { ppModuleEntry 18 } 
+		
+	ppModuleOutputCurrentLine2 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Amp"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 2 module AC output Current"
+		::= { ppModuleEntry 19 } 
+		
+	ppModuleOutputCurrentLine3 OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Amp"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present line 3 module AC output Current"
+		::= { ppModuleEntry 20 }
+
+     ppModuleDCVoltagePositive OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present module DC voltage positive"
+		::= { ppModuleEntry 21 } 
+	
+     ppModuleDCVoltageNegative OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "Volts"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present module DC voltage negative"
+		::= { ppModuleEntry 22 }
+		
+	 ppModuleFrequency OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "1/256 Hz"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present module frequency"
+		::= { ppModuleEntry 23 }
+		
+	 ppModuleNominalPower OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "KVA"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The module nominal power (KVA)"
+		::= { ppModuleEntry 24 }  
+		
+	ppModuleIsMaster OBJECT-TYPE
+		SYNTAX  INTEGER {
+			no(0),
+			yes(1)
+		}  
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The module nominal power (KVA)"
+		::= { ppModuleEntry 25 } 
+		
+--
+-- STSW group
+-- 
+	ppSTSW OBJECT IDENTIFIER ::= { powerplusMIB 8 } 
+	
+	ppSTSWNoResponseCount OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Number of times STSW no response to system controller. Start with 0"
+		::= { ppSTSW 1 } 
+		
+	ppSTSWAddress OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"STSW identification address"
+		::= { ppSTSW 2 }    
+		
+	ppSTSWStatus1 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present STSW status byte 1"
+		::= { ppSTSW 3 }  
+	
+	ppSTSWStatus2 OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present STSW status byte 2"
+		::= { ppSTSW 4 }
+		
+	ppSTSWInverterVoltageLine1 OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "Volts"
+		MAX-ACCESS read-only 
+		STATUS current
+		DESCRIPTION
+			"The present STSW inverter voltage (line 1)" 
+		::= { ppSTSW 5}  
+	
+	ppSTSWInverterVoltageLine2 OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "Volts"
+		MAX-ACCESS read-only 
+		STATUS current
+		DESCRIPTION
+			"The present STSW inverter voltage (line 2)" 
+		::= { ppSTSW 6}  
+		
+	ppSTSWInverterVoltageLine3 OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "Volts"
+		MAX-ACCESS read-only 
+		STATUS current
+		DESCRIPTION
+			"The present STSW inverter voltage (line 3)" 
+		::= { ppSTSW 7} 
+		ppSTSWBypassVoltageLine1 OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "Volts"
+		MAX-ACCESS read-only 
+		STATUS current
+		DESCRIPTION
+			"The present STSW bypass voltage (line 1)" 
+		::= { ppSTSW 8}  
+	
+	ppSTSWBypassVoltageLine2 OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "Volts"
+		MAX-ACCESS read-only 
+		STATUS current
+		DESCRIPTION
+			"The present STSW bypass voltage (line 2)" 
+		::= { ppSTSW 9}  
+	ppSTSWBypassVoltageLine3 OBJECT-TYPE
+		SYNTAX INTEGER 
+		UNITS "Volts"
+		MAX-ACCESS read-only 
+		STATUS current
+		DESCRIPTION
+			"The present STSW bypass voltage (line 3)" 
+		::= { ppSTSW 10}   
+		
+	 ppSTSWInverterFrequency OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "1/256 Hz"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present STSW inverter frequency"
+		::= { ppSTSW 11 } 
+			
+	 ppSTSWBypassFrequency OBJECT-TYPE
+		SYNTAX INTEGER  
+		UNITS "1/256 Hz"
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The present STSW bypass frequency"
+		::= { ppSTSW 12 }
+
+------ 
+--  LOG MIB definitions
+------
+	ppLog OBJECT IDENTIFIER ::= { powerplusMIB 9 }
+
+	ppLogTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF PpLogEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"Alarms log table"
+		::= { ppLog 1 }
+	
+	ppLogEntry OBJECT-TYPE
+		SYNTAX PpLogEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+		DESCRIPTION
+			"Entry table"
+		INDEX { ppLogIndex }
+		::= { ppLogTable 1 }
+	
+	PpLogEntry ::= SEQUENCE { 
+		ppLogIndex				INTEGER,   
+		ppLogAlarmID			INTEGER,
+		ppLogAlarmOnOff			INTEGER,
+		ppLogDateTime     		INTEGER,
+		ppLogASCIILogDateTime	DisplayString,
+		ppLogAlarmDescription	DisplayString,
+		ppLogDCVoltage			INTEGER
+	}  
+	
+	ppLogIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The Log index"
+		::= { ppLogEntry 1 }    
+		
+	ppLogAlarmID OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Alarm ID"
+		::= { ppLogEntry 2 } 
+		
+	ppLogAlarmOnOff OBJECT-TYPE
+		SYNTAX INTEGER {
+			on (0),  
+			off (1)
+		}
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Alarm On/Off"
+		::= { ppLogEntry 3 }
+		
+	ppLogDateTime OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Alarm entry from in seconds from 01/01/1970
+			
+			SYSCALL xc_ascshortdate(DWORD time, WORD year, month, day, hour, minute, second)
+			{
+				DWORD	tmp;
+				DWORD	days;
+				BYTE IsLeapYear = 0;
+				int msize[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+			
+				// Epoch is 1970 
+				for (year=1970 ; TRUE ; year++) {
+					IsLeapYear = isleap(year);
+					days = IsLeapYear ? 366 : 365;
+					tmp = days * SECPERDY;
+					if (tmp > time)
+						break;
+					time -= tmp;
+				}
+				// set month (0-11) 
+				for (month=0 ; month<12 ; month++) {
+					tmp = msize[month] * SECPERDY;
+					if ((month == 1) && IsLeapYear)
+						tmp += SECPERDY;
+					if (tmp > time)
+						break;
+					time -= tmp;
+				}
+				// set day of month (1-31) 
+				day = (WORD)( time/SECPERDY ) + 1;
+				time %= SECPERDY;
+				// set hour (0-23)
+				hour = (WORD) ( time/SECPERHR );
+				time %= SECPERHR;
+				// set minute (0-59) 
+				minute = time / SECPERMN;
+				time %= SECPERMN;
+				// set second (0-59) 
+				second = (WORD) time;
+			}
+			"
+		::= { ppLogEntry 4 } 
+		
+	ppLogASCIILogDateTime OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..255))
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Log entry in ASCII"
+		::= { ppLogEntry 5 }
+		
+	ppLogAlarmDescription OBJECT-TYPE
+		SYNTAX		DisplayString(SIZE(0..255))
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"Log entry in ASCII"
+		::= { ppLogEntry 6 }
+		
+	ppLogDCVoltage OBJECT-TYPE
+		SYNTAX INTEGER 
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Alarm ID"
+		::= { ppLogEntry 7 } 	  
+		
+	ppLogClear OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 to clear log. After clear the value will back to 0
+		Initial value is 0"
+		::= { ppLog 2 }  
+		
+--
+--  Command group
+--
+
+    ppCommand OBJECT IDENTIFIER ::= { powerplusMIB 10 }  
+    
+    ppCommandLoadOnBypass OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for over the UPS to bypass."
+		::= { ppCommand 1 } 
+		
+	 ppCommandLoadOnInverter OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for over the UPS to inverter."
+		::= { ppCommand 2 } 
+		
+	 ppCommandStartBatteryTest OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for start battery test."
+		::= { ppCommand 3 }   
+		
+	 ppCommandAbortBatteryTest OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for abort battery test."
+		::= { ppCommand 4 } 
+		
+	 ppCommandLedTest OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for LEDs test."
+		::= { ppCommand 5 } 
+		
+	 ppCommandShutdown OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for shutdown the UPS."
+		::= { ppCommand 6 } 
+		
+	 ppCommandStartup OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for startup the UPS."
+		::= { ppCommand 7 }
+	
+	 ppCommandRestart OBJECT-TYPE
+	    SYNTAX 		INTEGER 
+	    MAX-ACCESS  write-only
+	    STATUS      current
+	    DESCRIPTION
+		"Set value to 1 for restart the UPS."
+		::= { ppCommand 8 }
+
+	------ 
+	--  Traps
+	------ 
+	
+	ppTrap OBJECT IDENTIFIER ::= { powerplusMIB 11 } 
+	
+	ppTrapStatus OBJECT-TYPE
+	    SYNTAX  INTEGER {
+			off(0),
+			on(1)
+		}
+	    MAX-ACCESS  read-only
+	    STATUS      current
+	    DESCRIPTION
+	        "The trap status 0-added, 1-recovered"
+	     ::= { ppTrap 1} 
+     
+	ppTrapDescription OBJECT-TYPE
+		SYNTAX DisplayString(SIZE(0..64))  
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"The trap description"
+		::= { ppTrap 2 } 
+     
+    ppTrapPrefix OBJECT IDENTIFIER ::= {ppTrap 0} 
+    
+    ppTrap4 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"More than 1 rectifier faulty"
+		::= {ppTrapPrefix 1}   
+		
+	ppTrapSTRTUP NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Startup time-stamp"
+		::= {ppTrapPrefix 2} 
+		
+	ppTrapUPS-CM NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"UPS or more not responding"
+		::= {ppTrapPrefix 3}  
+		
+	ppTrapOVLOAD NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Load current high"
+		::= {ppTrapPrefix 4}
+		
+	ppTrapUPSHDN NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"UPS Shut Down"
+		::= {ppTrapPrefix 5}   
+		
+	ppTrapUPSOUT NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Suspect a fault output stage"
+		::= {ppTrapPrefix 6} 
+		
+	ppTrapCURSHR NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Suspect fault current sharing"
+		::= {ppTrapPrefix 7}  
+		
+	ppTrapBAT-CB NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Battery Circuit Breaker is open"
+		::= {ppTrapPrefix 8}  
+		
+	ppTrapSLFFLT NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Last self test fail"
+		::= {ppTrapPrefix 9} 
+		
+	ppTrapSTSWCM NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"STSW Not responding"
+		::= {ppTrapPrefix 10}
+		
+	ppTrapACFAIL NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"AC Input Faliure"
+		::= {ppTrapPrefix 11} 
+		
+	ppTrapACIN-H NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"AC Input high"
+		::= {ppTrapPrefix 12}
+
+    ppTrapAC-BRN NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Input Browdout"
+		::= {ppTrapPrefix 13} 
+		
+	ppTrapUSER-3 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"User 3 input open"
+		::= {ppTrapPrefix 14} 
+		
+	ppTrapUSER-2 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"User 2 input open"
+		::= {ppTrapPrefix 15} 
+	
+	ppTrapUSER-1 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"User 1 input open"
+		::= {ppTrapPrefix 16}
+		
+	ppTrapBATFLT NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Last battery test"
+		::= {ppTrapPrefix 17}  
+		
+	ppTrapEQ-HST NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Equalizing mode"
+		::= {ppTrapPrefix 18} 
+		
+	ppTrapE_P_O_ NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Emergency Power Off Activated"
+		::= {ppTrapPrefix 19} 
+	
+	ppTrapSTSWRN NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"STATIC SWITCH Warning"
+		::= {ppTrapPrefix 20}    
+		
+	ppTrapBATLOW NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Low Battery voltage"
+		::= {ppTrapPrefix 21} 
+		
+	ppTrapBATEND NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"End of Backup"
+		::= {ppTrapPrefix 22}  
+		
+	ppTrap1 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Minor HIGH DC voltage"
+		::= {ppTrapPrefix 23}  
+		
+	ppTrapBAT-HI NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"HIGH Battery voltage"
+		::= {ppTrapPrefix 24}
+		
+	ppTrapOUTFLT NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"No AC output to load"
+		::= {ppTrapPrefix 25} 
+		
+	ppTrapOVTEMP NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Over temperature"
+		::= {ppTrapPrefix 26} 
+		
+	ppTrapVIBRA_ NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"An alarm/s is vibrating"
+		::= {ppTrapPrefix 27} 
+		
+	ppTrapLOADBP NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Load on BYPASS"
+		::= {ppTrapPrefix 28}  
+		
+	ppTrap2 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"Internal SC2012 Supply"
+		::= {ppTrapPrefix 29} 
+		
+	ppTrap3 NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"AC input is abnormal"
+		::= {ppTrapPrefix 30}  
+		
+	ppTrapUPSMIN NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"One UPS module Warning!"
+		::= {ppTrapPrefix 31} 
+		
+	ppTrapUPSMAJ NOTIFICATION-TYPE
+		OBJECTS {
+			psTrapStatus,
+			ppTrapDescription
+		}
+		STATUS  current
+		DESCRIPTION  
+			"UPS modules Warning!"
+		::= {ppTrapPrefix 32}
+END
+   
